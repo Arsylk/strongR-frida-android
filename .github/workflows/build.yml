@@ -126,12 +126,12 @@ jobs:
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
         git clone --recurse-submodules https://github.com/frida/frida
         cd frida/subprojects/frida-core
-        git am ../../../Patchs/strongR-frida/frida-core/*.patch
+        git am ../../../strongR/patches/*.patch
     - name: two step patch   
       shell: bash
       run: |
         cd frida/subprojects/frida-gum/gum
-        git am ../../../../Patchs/strongR-frida/frida-gum/*.patch
+        git am ../../../../strongR/patches/*.patch
         cd ../../../
         
     - name: Configure
@@ -198,7 +198,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-arm/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.xz'
+        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.xz'
         asset_content_type: application/octet-stream
 
     - name: Upload android arm64 frida-server for strongR-frida
@@ -208,7 +208,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-arm64/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.xz'
+        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.xz'
         asset_content_type: application/octet-stream
 
     - name: Upload android x86 frida-server for strongR-frida
@@ -218,7 +218,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-x86/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.xz'
+        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.xz'
         asset_content_type: application/octet-stream
 
     - name: Upload android x86_64 frida-server for strongR-frida
@@ -228,7 +228,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-x86_64/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.xz'
+        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.xz'
         asset_content_type: application/octet-stream
         
     - name: Upload android arm frida-inject for strongR-frida
@@ -238,7 +238,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-arm/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.xz'
+        asset_name: 'nya-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.xz'
         asset_content_type: application/octet-stream
         
     - name: Upload android arm64 frida-inject for strongR-frida
@@ -248,7 +248,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-arm64/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.xz'
+        asset_name: 'nya-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.xz'
         asset_content_type: application/octet-stream
         
     - name: Upload android x86 frida-inject for strongR-frida
@@ -258,7 +258,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-x86/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.xz'
+        asset_name: 'nya-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.xz'
         asset_content_type: application/octet-stream
         
     - name: Upload android x86_64 frida-inject for strongR-frida
@@ -268,7 +268,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-x86_64/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm-x86_64.xz'
+        asset_name: 'nya-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm-x86_64.xz'
         asset_content_type: application/octet-stream
     
     - name: Upload android arm frida-gadget for strongR-frida
@@ -278,7 +278,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-arm/lib/frida/32/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.so.xz'
+        asset_name: 'nya-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.so.xz'
         asset_content_type: application/octet-stream
 
     - name: Upload android arm64 frida-gadget for strongR-frida
@@ -288,7 +288,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-arm64/lib/frida/64/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.so.xz'
+        asset_name: 'nya-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.so.xz'
         asset_content_type: application/octet-stream
    
     - name: Upload android x86 frida-gadget for strongR-frida
@@ -298,7 +298,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-x86/lib/frida/32/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.so.xz'
+        asset_name: 'nya-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.so.xz'
         asset_content_type: application/octet-stream
 
     - name: Upload android x86_64 frida-gadget for strongR-frida
@@ -308,5 +308,5 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: '${{ github.workspace }}/frida/build/frida-android-x86_64/lib/frida/64/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.so.xz'
+        asset_name: 'nya-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.so.xz'
         asset_content_type: application/octet-stream
