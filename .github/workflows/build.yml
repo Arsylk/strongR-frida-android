@@ -104,7 +104,7 @@ jobs:
       uses: nttld/setup-ndk@v1.0.6
       with:
         ndk-version: r25b
-    
+
     - name: Set up Python 3.9
       uses: actions/setup-python@v5.1.0
       with:
@@ -116,8 +116,6 @@ jobs:
         python3 -m pip install lief
         python3 -m pip install graphlib
 
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
 
     - name: build frida for Android
       shell: bash
@@ -137,8 +135,8 @@ jobs:
       shell: bash
       run: |
           cd frida
-          mkdir build-${{ matrix.arch }}
-          cd build-${{ matrix.arch }}
+          mkdir -p build/${{ matrix.arch }}
+          cd build/${{ matrix.arch }}
           ../configure  --host=android-${{ matrix.arch }}
           make
 
@@ -146,12 +144,21 @@ jobs:
       shell: bash
       run: |
         pushd frida
-        
-        xz "build-${{ matrix.arch }}/subprojects/frida-core/server/frida-server"
-        xz "build-${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so"
-        xz "build-${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject"                
+        xz "build/${{ matrix.arch }}/subprojects/frida-core/server/frida-server"
+        xz "build/${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so"
+        xz "build/${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject"
         popd
-   
+
+    - uses: actions/upload-artifact@v4
+      with:
+          name: artifacts
+          path: |
+            frida/build/*/subprojects/frida-core/server/frida-server.xz
+            frida/build/*/subprojects/frida-core/lib/gadget/frida-gadget.so.xz
+            frida/build/*/subprojects/frida-core/inject/frida-inject.xz
+
+    
+
   github_upload:
     runs-on: ubuntu-20.04
     needs: [check_version, create_release, android_build]
@@ -184,6 +191,9 @@ jobs:
           } catch (e) {
             core.setFailed(e.message);
           }
+    
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
 
     - name: Upload frida-server for strongR-frida
       uses: actions/upload-release-asset@v1.0.2
