@@ -116,8 +116,8 @@ jobs:
         python3 -m pip install lief
         python3 -m pip install graphlib
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: build frida for Android
       shell: bash
