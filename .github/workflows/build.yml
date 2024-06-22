@@ -122,21 +122,16 @@ jobs:
     - name: build frida for Android
       shell: bash
       run: |
-        export PWD=$(pwd)
         git config --global user.name "${{ secrets.GIT_NAME }}"
         git config --global user.email "${{ secrets.GIT_EMAIL }}"
-        git clone ${{ secrets.PATCH_REPO }} strongR
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
+        git clone ${{ secrets.PATCH_REPO }} strongR
         git clone --recurse-submodules https://github.com/frida/frida
-        cd frida/subprojects/frida-core
-        ls $PWD/strongR/patches
-        git apply $PWD/strongR/patches/*.patch
     - name: two step patch   
       shell: bash
       run: |
-        cd frida/subprojects/frida-gum/gum
-        git am ../../../../strongR/patches/*.patch
-        cd ../../../
+        cd frida/subprojects/frida-core
+        git apply --ignore-space-change --ignore-whitespace ../../../strongR/patches/*.patch
         
     - name: Configure
       shell: bash
