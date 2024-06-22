@@ -104,7 +104,7 @@ jobs:
       uses: nttld/setup-ndk@v1.0.6
       with:
         ndk-version: r25b
-    
+
     - name: Set up Python 3.9
       uses: actions/setup-python@v5.1.0
       with:
@@ -113,36 +113,62 @@ jobs:
     - name: install dependencies
       run: |
         sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install build-essential tree ninja-build gcc-multilib g++-multilib lib32stdc++-9-dev flex bison xz-utils ruby ruby-dev python3-requests python3-setuptools python3-dev python3-pip libc6-dev libc6-dev-i386 -y
-        sudo gem install fpm -v 1.11.0 --no-document
         python3 -m pip install lief
         python3 -m pip install graphlib
+
 
     - name: build frida for Android
       shell: bash
       run: |
         git config --global user.name "${{ secrets.GIT_NAME }}"
         git config --global user.email "${{ secrets.GIT_EMAIL }}"
-        git clone ${{ secrets.PATCH_REPO }}
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
+        git clone ${{ secrets.PATCH_REPO }} strongR
         git clone --recurse-submodules https://github.com/frida/frida
-        cd frida/subprojects/frida-core
-        git am ../../../Patchs/strongR-frida/frida-core/*.patch
     - name: two step patch   
       shell: bash
       run: |
-        cd frida/subprojects/frida-gum/gum
-        git am ../../../../Patchs/strongR-frida/frida-gum/*.patch
-        cd ../../../
+        cd frida/subprojects/frida-core
+        git apply --ignore-space-change --ignore-whitespace ../../../strongR/patches/*.patch
         
     - name: Configure
       shell: bash
       run: |
           cd frida
-          mkdir build-${{ matrix.arch }}
-          cd build-${{ matrix.arch }}
-          ../configure  --host=android-${{ matrix.arch }}
+          mkdir -p build/${{ matrix.arch }}
+          cd build/${{ matrix.arch }}
+          ../../configure  --host=android-${{ matrix.arch }}
           make
 
+    - name: package build result for Android
+      shell: bash
+      run: |
+        pushd frida
+        xz "build/${{ matrix.arch }}/subprojects/frida-core/server/frida-server"
+        xz "build/${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so"
+        xz "build/${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject"
+        popd
+
+    - uses: actions/upload-artifact@v4
+      with:
+          name: artifacts-${{ matrix.arch }}
+          compression-level: 8
+          path: |
+            frida/build/${{ matrix.arch }}/subprojects/frida-core/server/frida-server.xz
+            frida/build/${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so.xz
+            frida/build/${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject.xz
+
+    
+
+  github_upload:
+    runs-on: ubuntu-20.04
+    needs: [check_version, create_release, android_build]
+    strategy:
+      matrix:
+        arch: [x86, x86_64, arm, arm64]
+      fail-fast: false
+
+    steps:
     - name: Check release version
       id: checkReleaseVersion
       uses: actions/github-script@v3.1.0
@@ -166,147 +192,37 @@ jobs:
           } catch (e) {
             core.setFailed(e.message);
           }
-    - name: package build result for Android
-      shell: bash
-      run: |
-        pushd frida
-        
-        xz build-android-arm/subprojects/frida-core/server/frida-server
-        xz build/frida-android-arm64/bin/frida-server
-        
-        xz build/frida-android-x86/bin/frida-server
-        xz build/frida-android-x86_64/bin/frida-server
-        
-        xz build/frida-android-arm/bin/frida-inject
-        xz build/frida-android-arm64/bin/frida-inject
-        
-        xz build/frida-android-x86/bin/frida-inject
-        xz build/frida-android-x86_64/bin/frida-inject
-        
-        xz build/frida-android-arm/lib/frida/32/frida-gadget.so
-        xz build/frida-android-arm64/lib/frida/64/frida-gadget.so
-        
-        xz build/frida-android-x86/lib/frida/32/frida-gadget.so
-        xz build/frida-android-x86_64/lib/frida/64/frida-gadget.so
-        
-        popd
-        
-    - name: Upload android arm frida-server for strongR-frida
+    
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Upload frida-server for strongR-frida
       uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-arm/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.xz'
+        asset_path: '${{ github.workspace }}/frida/build-${{ matrix.arch }}/subprojects/frida-core/server/frida-server.xz'
+        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ needs.check_version.outputs.FRIDA_VERSION }}.xz'
         asset_content_type: application/octet-stream
 
-    - name: Upload android arm64 frida-server for strongR-frida
+    - name: Upload android frida-inject for strongR-frida
       uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-arm64/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.xz'
-        asset_content_type: application/octet-stream
-
-    - name: Upload android x86 frida-server for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-x86/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.xz'
-        asset_content_type: application/octet-stream
-
-    - name: Upload android x86_64 frida-server for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-x86_64/bin/frida-server.xz'
-        asset_name: 'hluda-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.xz'
-        asset_content_type: application/octet-stream
-        
-    - name: Upload android arm frida-inject for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-arm/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.xz'
-        asset_content_type: application/octet-stream
-        
-    - name: Upload android arm64 frida-inject for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-arm64/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.xz'
-        asset_content_type: application/octet-stream
-        
-    - name: Upload android x86 frida-inject for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-x86/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.xz'
-        asset_content_type: application/octet-stream
-        
-    - name: Upload android x86_64 frida-inject for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-x86_64/bin/frida-inject.xz'
-        asset_name: 'hluda-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm-x86_64.xz'
+        asset_path: '${{ github.workspace }}/frida/build-${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject.xz'
+        asset_name: 'nya-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ matrix.arch }}.xz'
         asset_content_type: application/octet-stream
     
-    - name: Upload android arm frida-gadget for strongR-frida
+    - name: Upload android frida-gadget for strongR-frida
       uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-arm/lib/frida/32/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm.so.xz'
+        asset_path: '${{ github.workspace }}/frida/build-${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.xz'
+        asset_name: 'nya-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ matrix.arch }}.so.xz'
         asset_content_type: application/octet-stream
 
-    - name: Upload android arm64 frida-gadget for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-arm64/lib/frida/64/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.so.xz'
-        asset_content_type: application/octet-stream
-   
-    - name: Upload android x86 frida-gadget for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-x86/lib/frida/32/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86.so.xz'
-        asset_content_type: application/octet-stream
-
-    - name: Upload android x86_64 frida-gadget for strongR-frida
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build/frida-android-x86_64/lib/frida/64/frida-gadget.so.xz'
-        asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.so.xz'
-        asset_content_type: application/octet-stream
