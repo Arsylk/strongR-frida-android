@@ -142,6 +142,25 @@ jobs:
           ../configure  --host=android-${{ matrix.arch }}
           make
 
+    - name: package build result for Android
+      shell: bash
+      run: |
+        pushd frida
+        
+        xz "build-${{ matrix.arch }}/subprojects/frida-core/server/frida-server"
+        xz "build-${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so"
+        xz "build-${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject"                
+        popd
+   
+  github_upload:
+    runs-on: ubuntu-20.04
+    needs: [check_version, create_release, android_build]
+    strategy:
+      matrix:
+        arch: [x86, x86_64, arm, arm64]
+      fail-fast: false
+
+    steps:
     - name: Check release version
       id: checkReleaseVersion
       uses: actions/github-script@v3.1.0
@@ -165,25 +184,7 @@ jobs:
           } catch (e) {
             core.setFailed(e.message);
           }
-    - name: package build result for Android
-      shell: bash
-      run: |
-        pushd frida
-        
-        xz "build-${{ matrix.arch }}/subprojects/frida-core/server/frida-server"
-        xz "build-${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so"
-        xz "build-${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject"                
-        popd
-   
-  github_upload:
-    runs-on: ubuntu-20.04
-    needs: [check_version, create_release, android_build]
-    strategy:
-      matrix:
-        arch: [x86, x86_64, arm, arm64]
-      fail-fast: false
 
-    steps:
     - name: Upload frida-server for strongR-frida
       uses: actions/upload-release-asset@v1.0.2
       env:
