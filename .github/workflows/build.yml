@@ -137,7 +137,7 @@ jobs:
           cd frida
           mkdir -p build/${{ matrix.arch }}
           cd build/${{ matrix.arch }}
-          ../configure  --host=android-${{ matrix.arch }}
+          ../../configure  --host=android-${{ matrix.arch }}
           make
 
     - name: package build result for Android
