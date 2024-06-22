@@ -149,10 +149,12 @@ jobs:
         xz "build/${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject"
         popd
 
+
+
     - uses: actions/upload-artifact@v4
       with:
           name: artifacts-${{ matrix.arch }}
-          compression-level: 8
+          compression-level: 0
           path: |
             frida/build/${{ matrix.arch }}/subprojects/frida-core/server/frida-server.xz
             frida/build/${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.so.xz
@@ -193,8 +195,8 @@ jobs:
             core.setFailed(e.message);
           }
     
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    - uses: actions/download-artifact@v4
+    
 
     - name: Upload frida-server for strongR-frida
       uses: actions/upload-release-asset@v1.0.2
@@ -202,7 +204,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build-${{ matrix.arch }}/subprojects/frida-core/server/frida-server.xz'
+        asset_path: 'artifacts-${{ matrix.arch }}/server/frida-server.xz'
         asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ needs.check_version.outputs.FRIDA_VERSION }}.xz'
         asset_content_type: application/octet-stream
 
@@ -212,7 +214,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build-${{ matrix.arch }}/subprojects/frida-core/inject/frida-inject.xz'
+        asset_path: 'artifacts-${{ matrix.arch }}/inject/frida-inject.xz'
         asset_name: 'nya-inject-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ matrix.arch }}.xz'
         asset_content_type: application/octet-stream
     
@@ -222,7 +224,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
-        asset_path: '${{ github.workspace }}/frida/build-${{ matrix.arch }}/subprojects/frida-core/lib/gadget/frida-gadget.xz'
+        asset_path: 'artifacts-${{ matrix.arch }}/lib/gadget/frida-gadget.xz'
         asset_name: 'nya-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ matrix.arch }}.so.xz'
         asset_content_type: application/octet-stream
 
