@@ -1,3 +1,4 @@
+
 diff --git a/lib/agent/agent-glue.c b/lib/agent/agent-glue.c
 index a8affbab..f02ac6a8 100644
 --- a/lib/agent/agent-glue.c
