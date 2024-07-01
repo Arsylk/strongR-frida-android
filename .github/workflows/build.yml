@@ -205,7 +205,7 @@ jobs:
       with:
         upload_url: '${{ steps.checkReleaseVersion.outputs.upload_url }}'
         asset_path: 'artifacts-${{ matrix.arch }}/server/frida-server.xz'
-        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ needs.check_version.outputs.FRIDA_VERSION }}.xz'
+        asset_name: 'nya-server-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-${{ matrix.arch }}.xz'
         asset_content_type: application/octet-stream
 
     - name: Upload android frida-inject for strongR-frida
